@@ -2,17 +2,30 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/apps', [AppController::class, 'index'])->name('apps.index');
+// Protected from authenticated users
+Route::middleware('guest')->controller(AuthController::class)->group(function(){
+    Route::get('/register', 'showRegister')->name('show.register');
+    Route::get('/login', 'showLogin')->name('show.login');
+    Route::post('/register', 'register')->name('register');
+    Route::post('/login', 'login')->name('login');
+});
 
-Route::get('/apps/create', [AppController::class, 'create'])->name('apps.create');
 
-Route::get('/apps/{app}', [AppController::class, 'show'])->name('apps.show');
 
-Route::post('/apps', [AppController::class, 'store'])->name('apps.store');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::delete('/apps/{app}', [AppController::class, 'destroy'])->name('apps.destroy');
+
+// Protected from unauthenticated users
+Route::middleware('auth')->controller(AppController::class)->group(function(){
+    Route::get('/apps', 'index')->name('apps.index');
+    Route::get('/apps/create', 'create')->name('apps.create')->middleware('auth');
+    Route::get('/apps/{app}', 'show')->name('apps.show');
+    Route::post('/apps', 'store')->name('apps.store');
+    Route::delete('/apps/{app}', 'destroy')->name('apps.destroy');
+});
